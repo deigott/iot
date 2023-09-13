@@ -10,9 +10,11 @@ Vagrant.configure("2") do |config|
     server.vm.provider "virtualbox" do |vb|
       vb.memory = 512  # 512 MB of RAM
       vb.cpus = 1      # 1 CPU
+      vb.name = 'mashadS'
     end
     server.vm.provision "shell", run: "always", inline: <<-SHELL
-      IPADDR=$(ip a show eth1 | grep "inet " | awk '{print $2}' | cut -d / -f1)
+      sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+      sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
       curl -sfL https://get.k3s.io | sh -s - server --write-kubeconfig-mode 644 --flannel-iface=eth1
       NODE_TOKEN="/var/lib/rancher/k3s/server/node-token"
       cp ${NODE_TOKEN} /vagrant/
@@ -28,9 +30,26 @@ Vagrant.configure("2") do |config|
     serverWorker.vm.provider "virtualbox" do |vb|
       vb.memory = 512  # 512 MB of RAM
       vb.cpus = 1      # 1 CPU
+      vb.name = 'mashadSW'
     end
+    server.vm.provision "shell", inline: <<-SHELL
+      # Update and install required packages
+      sudo yum update -y
+      sudo yum install -y gcc kernel-devel kernel-headers dkms make bzip2 perl
+    
+      # Mount the Guest Additions ISO
+      sudo mount /dev/cdrom /mnt
+    
+      # Install Guest Additions
+      sudo /mnt/VBoxLinuxAdditions.run
+    
+      # Clean up
+      sudo umount /mnt
+    SHELL
     serverWorker.vm.provision "shell", run: "always", inline: <<-SHELL
-			curl -sfL https://get.k3s.io | sh -s - agent --server "https://192.168.56.110:6443" --write-kubeconfig-mode 644 $K3S_TOKEN$(cat /vagrant/node-token) --flannel-iface=eth1
+      sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+      sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+			curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat /vagrant/node-token) sh -s - agent --server "https://192.168.56.110:6443" --write-kubeconfig-mode 644  --flannel-iface=eth1
     SHELL
     serverWorker.vm.hostname = "mashadSW"
   end
