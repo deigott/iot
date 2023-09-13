@@ -4,15 +4,22 @@
 Vagrant.configure("2") do |config|
   # Define the specifications for the machines
   config.vm.define "mashadS" do |server|
-    server.vm.box = "centos/stream9"  # Use the latest stable version of Ubuntu
+    server.vm.box = "centos/8"  # Use the latest stable version of Ubuntu
     server.vm.network "private_network", ip: "192.168.56.110"
-    server.vm.synced_folder ".", "/vagrant", type:"nfs"
+
+    server.vm.synced_folder ".", "/vagrant", type:"virtualbox"
+    
+    
     server.vm.provider "virtualbox" do |vb|
       vb.memory = 512  # 512 MB of RAM
       vb.cpus = 1      # 1 CPU
       vb.name = 'mashadS'
     end
+    
     server.vm.provision "shell", run: "always", inline: <<-SHELL
+      cd /etc/yum.repos.d/
+      sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+      sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
       curl -sfL https://get.k3s.io | sh -s - server --write-kubeconfig-mode 644 --flannel-iface=eth1
       NODE_TOKEN="/var/lib/rancher/k3s/server/node-token"
       cp ${NODE_TOKEN} /vagrant/
@@ -22,14 +29,15 @@ Vagrant.configure("2") do |config|
   end
   
   config.vm.define "mashadSW" do |serverWorker|
-    serverWorker.vm.box = "centos/stream9"  # Use the latest stable version of Ubuntu
+    serverWorker.vm.box = "centos/8"  # Use the latest stable version of Ubuntu
     serverWorker.vm.network "private_network", ip: "192.168.56.111"
     serverWorker.vm.provider "virtualbox" do |vb|
       vb.memory = 512  # 512 MB of RAM
       vb.cpus = 1      # 1 CPU
       vb.name = 'mashadSW'
     end
-    serverWorker.vm.synced_folder ".", "/vagrant", type:"nfs"
+    serverWorker.vm.synced_folder ".", "/vagrant", type:"virtualbox"
+    
     serverWorker.vm.provision "shell", run: "always", inline: <<-SHELL
 			curl -sfL https://get.k3s.io | K3S_TOKEN=$(cat /vagrant/node-token) sh -s - agent --server "https://192.168.56.110:6443" --write-kubeconfig-mode 644  --flannel-iface=eth1
     SHELL
