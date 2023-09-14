@@ -24,13 +24,14 @@ Vagrant.configure("2") do |config|
   # Define the specifications for controller machines
   
   config.vm.define SERVER_NAME do |controller|
-        
+    controller.vm.box = OS_BOX # Use the latest stable version of Ubuntu
+
     controller.vm.network NETWORK_TYPE, ip: SERVER_IP
     
     controller.vm.provider VAGRANT_PROVIDER do |vb|
-      vb.memory = 1024  # 512 MB of RAM
-      vb.cpus = 1      # 1 CPU
-      vb.name = SERVER_NAME
+      vb.memory = MEMORY_VALUE  # 512 MB of RAM
+      vb.cpus   = CPU_VALUE     # 1 CPU
+      vb.name   = SERVER_NAME
     end
     
     controller.vm.provision "shell", path: "./scripts/k3s_controller_install.sh"
@@ -41,13 +42,14 @@ Vagrant.configure("2") do |config|
   # Define the specifications for agent machines
   
   config.vm.define AGENT_NAME do |agent|
-  
+    agent.vm.box = OS_BOX # Use the latest stable version of Ubuntu
+
     agent.vm.network NETWORK_TYPE, ip: AGENT_IP
     
     agent.vm.provider VAGRANT_PROVIDER do |vb|
-      vb.memory = 1024  # 512 MB of RAM
-      vb.cpus = 1      # 1 CPU
-      vb.name = AGENT_NAME
+      vb.memory = MEMORY_VALUE  # 512 MB of RAM
+      vb.cpus   = CPU_VALUE      # 1 CPU
+      vb.name   = AGENT_NAME
     end
     
     agent.vm.provision "shell", path: "./scripts/k3s_agent_install.sh"
