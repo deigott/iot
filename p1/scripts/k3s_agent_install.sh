@@ -3,6 +3,10 @@
 # Setup path of the controller node token.
 K3S_TOKEN_FILE="/vagrant/.configs/master-token"
 
+# Configure centos appstream mirrorlist
+cd /etc/yum.repos.d/
+sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
 
 
 # Install k3s and configure a worker node.
