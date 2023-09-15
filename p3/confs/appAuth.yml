@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wil-playground
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/deigott/arogapp  # Replace with your GitHub repo URL
+    targetRevision: main  # Replace with the desired branch or commit
+    path: manifest  # Replace with the path to your application manifests
+  destination:
+    server: https://kubernetes.default.svc  # Use the URL of your Kubernetes cluster API server
+    namespace: dev
+  syncPolicy:
+    automated:
+      prune: true  # Enable auto-pruning of resources not defined in Git
+      selfHeal: true  # Enable auto-recovery of resources that drift from Git
