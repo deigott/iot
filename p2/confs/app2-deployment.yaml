@@ -15,20 +15,15 @@ spec:
         app: app-two
     spec:
       containers:
-        - name: hello-kubernetes
+        - name: app-two
           image: paulbouwer/hello-kubernetes:1.10
           env:
+          - name: PORT
+            value: "80"
           - name: MESSAGE
             value: "Hello from app2."
           ports:
           - containerPort: 80
-          resources:
-            limits:
-              memory: 256Mi
-              cpu: "0.2"
-            requests:
-              memory: 256Mi
-              cpu: "0.2"
 ---
 
 apiVersion: v1
