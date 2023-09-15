@@ -18,17 +18,12 @@ spec:
         - name: app-three
           image: paulbouwer/hello-kubernetes:1.10
           env:
+          - name: PORT
+            value: "80"
           - name: MESSAGE
             value: "Hello from app3."
           ports:
           - containerPort: 80
-          resources:
-            limits:
-              memory: 256Mi
-              cpu: "0.2"
-            requests:
-              memory: 256Mi
-              cpu: "0.2"
 ---
 
 apiVersion: v1
