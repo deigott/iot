@@ -15,21 +15,15 @@ spec:
         app: app-one
     spec:
       containers:
-        - name: app1
+        - name: app-one
           image: paulbouwer/hello-kubernetes:1.10
           env:
           - name: MESSAGE
             value: "Hello from app1."
+          - name: PORT
+            value: "80"
           ports:
           - containerPort: 80
-          resources:
-            limits:
-              memory: 256Mi
-              cpu: "0.2"
-            requests:
-              memory: 256Mi
-              cpu: "0.2"
-
 ---
 
 apiVersion: v1
