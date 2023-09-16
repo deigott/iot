@@ -12,6 +12,10 @@ gitlab-runner:
   install: false
 
 gitlab:
+  users:
+    - username: alice
+      password: secret123
+
   repositories:
     - name: iotapp
       namespace: gitlab
