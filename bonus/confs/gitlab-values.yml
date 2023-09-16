@@ -1,0 +1,20 @@
+global:
+  hosts:
+    domain: gitlab.mashad.ma
+  ingress:
+    configureCertmanager: false
+  edition: ce
+
+certmanager-issuer:
+  email: mashad@student.1337.ma
+
+gitlab-runner:
+  install: false
+
+gitlab:
+  repositories:
+    - name: iotapp
+      namespace: gitlab
+      description: iotapp
+      path: manifest
+      default_branch: main
