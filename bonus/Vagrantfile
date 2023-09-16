@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Assign global variables
+OS_BOX = "hashicorp/bionic64"
+
+VAGRANT_PROVIDER = "virtualbox"
+NETWORK_TYPE = "private_network"
+
+MEMORY_VALUE = 3024
+CPU_VALUE = 3
+
+SERVER_NAME = "mashadS"
+SERVER_IP = "192.168.56.110"
+
+AGENT_NAME = "mashadSW"
+AGENT_IP = "192.168.56.111"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = OS_BOX # Use the latest stable version of Ubuntu
+
+  config.vm.provider VAGRANT_PROVIDER do |vb|
+      vb.memory = MEMORY_VALUE  # 512 MB of RAM
+      vb.cpus   = CPU_VALUE      # 1 CPU
+  end
+    
+  # Define the specifications for controller machines
+  config.vm.define SERVER_NAME do |cluster|
+    cluster.vm.network NETWORK_TYPE, ip: SERVER_IP
+    cluster.vm.hostname = SERVER_NAME
+    # cluster.vm.provision "shell", path: "./scripts/setup-k3d.sh"
+    # cluster.vm.provision "shell", path: "./scripts/deploy-k3d.sh"
+    cluster.vm.provider VAGRANT_PROVIDER do |vb|
+      vb.name = SERVER_NAME
+    end
+  end
+  
+  # Define the specifications for agent machines
+  config.vm.define AGENT_NAME do |gitlab|
+    # Increase the boot timeout (in seconds)
+    gitlab.vm.boot_timeout = 600 # Change this value to your desired timeout
+
+    gitlab.vm.network NETWORK_TYPE, ip: AGENT_IP
+    gitlab.vm.hostname = AGENT_NAME
+    gitlab.vm.provider VAGRANT_PROVIDER do |vb|
+      vb.name = AGENT_NAME
+    end
+  end
+  
+end
