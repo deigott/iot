@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab-deployment
+  namespace: gitlab
+  labels:
+    app: gitlab
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: gitlab
+  template:
+    metadata:
+      labels:
+        app: gitlab
+    spec:
+      containers:
+      - name: gitlab
+        image: gitlab/gitlab-ce:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: config
+          mountPath: /etc/gitlab
+        - name: logs
+          mountPath: /var/log/gitlab
+        - name: data
+          mountPath: /var/opt/gitlab
+        ports:
+        - containerPort: 443
+        - containerPort: 80
+        - containerPort: 22
+        env:
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: "external_url 'http://gitlab.mashad.ma:1337'; nginx['listen_port'] = 80;"
+      volumes:
+      - name: config
+        hostPath:
+          path: /srv/gitlab/config
+      - name: logs
+        hostPath:
+          path: /srv/gitlab/logs 
+      - name: data
+        hostPath:
+          path: /srv/gitlab/data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitlab-service
+  namespace: gitlab
+spec:
+  selector:
+    app: gitlab
+  type: LoadBalancer
+  ports:
+  - port: 1337
+    targetPort: 80
+
+#     apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: gitlab-deployment
+#   namespace: gitlab
+#   labels:
+#     app: gitlab
+# spec:
+#   replicas: 1
+#   revisionHistoryLimit: 1
+#   selector:
+#     matchLabels:
+#       app: gitlab
+#   template:
+#     metadata:
+#       labels:
+#         app: gitlab
+#     spec:
+#       containers:
+#       - name: gitlab
+#         image: gitlab/gitlab-ce:latest
+#         imagePullPolicy: IfNotPresent
+#         volumeMounts:
+#         - name: config
+#           mountPath: /etc/gitlab
+#         - name: logs
+#           mountPath: /var/log/gitlab
+#         - name: data
+#           mountPath: /var/opt/gitlab
+#         ports:
+#         - containerPort: 443
+#         - containerPort: 80
+#         - containerPort: 22
+#         env:
+#         - name: GITLAB_OMNIBUS_CONFIG
+#           value: | 
+#             external_url 'https://gitlab.mashad.ma:1337/'
+#             gitlab_rails['time_zone'] = 'America/Chicago'
+#             gitlab_rails['gitlab_email_from'] = 'mashad@student.1337.ma'
+#             gitlab_rails['gitlab_email_display_name'] = 'GitLab Administrator'
+#             gitlab_rails['gitlab_email_reply_to'] = 'mashad@student.1337.ma'
+#             gitlab_rails['backup_keep_time'] = 14515200
+#             logging['logrotate_frequency'] = 'weekly'
+#             logging['logrotate_rotate'] = 52
+#             logging['logrotate_compress'] = 'compress'
+#             logging['logrotate_method'] = 'copytruncate'
+#             logging['logrotate_delaycompress'] = 'delaycompress'
+#             nginx['listen_port'] = 443
+#             nginx['redirect_http_to_https'] = true
+#             nginx['ssl_certificate'] = '/var/opt/gitlab/gitlab.crt'
+#             nginx['ssl_certificate_key'] = '/var/opt/gitlab/gitlab.key'
+#             nginx['ssl_protocols'] = 'TLSv1.1 TLSv1.2'
+#             nginx['logrotate_frequency'] = 'weekly'
+#             nginx['logrotate_rotate'] = 52
+#             nginx['logrotate_compress'] = 'compress'
+#             nginx['logrotate_method'] = 'copytruncate'
+#             nginx['logrotate_delaycompress'] = 'delaycompress'
+#       volumes:
+#         - name: config
+#           hostPath:
+#             path: /srv/gitlab/config
+#         - name: logs
+#           hostPath:
+#             path: /srv/gitlab/logs 
+#         - name: data
+#           hostPath:
+#             path: /srv/gitlab/data
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: gitlab-service
+#   namespace: gitlab
+# spec:
+#   selector:
+#     app: gitlab
+#   type: LoadBalancer
+#   ports:
+#   - port: 1337
+#     targetPort: 443
