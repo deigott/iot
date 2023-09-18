@@ -12,7 +12,7 @@ curl --request POST --header "PRIVATE-TOKEN: $ACCESS_TOKEN" "$GITLAB_API/project
 
 # Clone the newly created project
 echo "Cloning the GitLab project..."
-git clone "https://gitlab.mashad.ma/$USERNAME/$PROJECT_NAME.git"
+git clone "http://gitlab.mashad.ma/$USERNAME/$PROJECT_NAME.git"
 cd "$PROJECT_NAME"
 
 # Add your code files to the repository
