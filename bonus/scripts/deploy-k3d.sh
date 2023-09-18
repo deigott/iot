@@ -84,6 +84,9 @@ echo -n "[INFO]   Gitlab password: "
 
 kubectl get secret -n gitlab gitlab-gitlab-initial-root-password -o jsonpath='{.data.password}' | base64 -d; echo
 
+echo 'Waiting for gitlab to be deployed'      
+kubectl wait -n gitlab --for=condition=available deployment --all --timeout=-1s
+
 echo "[INFO]  Forwarding port."
 
 kubectl port-forward --address 192.168.56.111 svc/gitlab-webservice-default -n gitlab 1337:8181 &> /dev/null
