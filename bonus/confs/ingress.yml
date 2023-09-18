@@ -1,16 +1,16 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress-service
+  name: gitlab-ingress
 spec:
   rules:
   - host: gitlab.mashad.ma
     http:
       paths:
-      - path: /
-        pathType: Prefix
+      - pathType: Prefix
+        path: /
         backend:
           service:
-            name: gitlab
+            name: gitlab-service  # Name of your GitLab service
             port:
-              number: 80
+              number: 1337
