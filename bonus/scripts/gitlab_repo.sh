@@ -8,7 +8,7 @@ GITLAB_API="https://gitlab.mashad.ma/api/v4"
 
 # Create a new GitLab project
 echo "Creating a new GitLab project..."
-curl --request POST --header "PRIVATE-TOKEN: $ACCESS_TOKEN" "$GITLAB_API/projects?name=$PROJECT_NAME"
+curl -X POST --header "PRIVATE-TOKEN: $ACCESS_TOKEN" "$GITLAB_API/projects?name=$PROJECT_NAME"
 
 # Clone the newly created project
 echo "Cloning the GitLab project..."
