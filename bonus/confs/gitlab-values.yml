@@ -1,6 +1,7 @@
 global:
   hosts:
     domain: gitlab.mashad.ma
+    https: true
   ingress:
     configureCertmanager: false
   edition: ce
@@ -12,13 +13,20 @@ gitlab-runner:
   install: false
 
 gitlab:
-  users:
-    - username: alice
-      password: secret123
+  ingress:
+    tls:
+      enabled: true
+      secretName: gitlab-tls-secret  # Replace with your TLS secret name
 
-  repositories:
-    - name: iotapp
-      namespace: gitlab
-      description: iotapp
-      path: manifest
-      default_branch: main
+# ... other configurations ...
+
+helm install gitlab gitlab/gitlab \
+    --set global.hosts.domain=$DOMAIN \
+    --set certmanager-issuer.email=$EMAIL \
+    --set global.hosts.https="false" \
+    --set global.ingress.configureCertmanager="false" \
+    --set gitlab-runner.install="false" \
+    --set global.edition=ce \
+    --set certmanager.install=false \
+    --set global.ingress.tls.secretName=gitlab-cert
+    -n gitlab &> /dev/null
