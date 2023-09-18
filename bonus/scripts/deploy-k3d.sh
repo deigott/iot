@@ -6,6 +6,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No color
 
+export EMAIL="mashad@student.1337.ma"
+export DOMAIN="gitlab.mashad.ma"
+
 # Function to print log messages with color and log level
 log() {
   local level="$1"
