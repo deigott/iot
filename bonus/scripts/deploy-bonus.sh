@@ -59,56 +59,60 @@ wait_for_pods() {
   log "INFO" "All pods in namespace '${namespace}' are ready."
 }
 
-# # Clean up GitLab
-# log "INFO" "Deleting GitLab resources..."
-# helm uninstall gitlab -n gitlab &> /dev/null
-# log "INFO" "GitLab resources deleted successfully."
+# Clean up GitLab
+log "INFO" "Deleting GitLab resources..."
+kubectl delete -f ../confs/gitlab-app.yml &> /dev/null
+log "INFO" "GitLab resources deleted successfully."
 
-# # Step 1: Delete the Argo CD Namespace
-# log "INFO" "Deleting Argo CD, gitlab and dev namespaces..."
-# kubectl delete namespace argocd &> /dev/null
-# kubectl delete namespace dev &> /dev/null
-# kubectl delete namespace gitlab &> /dev/null
-# log "INFO" "Argo CD, gitlab and dev namespaces deleted successfully."
+# Step 1: Delete the Argo CD Namespace
+log "INFO" "Deleting Argo CD, gitlab and dev namespaces..."
+kubectl delete namespace argocd &> /dev/null
+kubectl delete namespace dev &> /dev/null
+kubectl delete namespace gitlab &> /dev/null
+log "INFO" "Argo CD, gitlab and dev namespaces deleted successfully."
 
 
-# # Step 2: Delete the Kubernetes Cluster
-# log "INFO" "Deleting the Kubernetes cluster..."
-# k3d cluster delete cid-cluster &> /dev/null
-# log "INFO" "Kubernetes cluster deleted successfully."
+# Step 2: Delete the Kubernetes Cluster
+log "INFO" "Deleting the Kubernetes cluster..."
+k3d cluster delete cid-cluster &> /dev/null
+log "INFO" "Kubernetes cluster deleted successfully."
 
-# # Step 3: Unset KUBECONFIG
-# unset KUBECONFIG
-# log "INFO" "KUBECONFIG unset."
+# Step 3: Unset KUBECONFIG
+unset KUBECONFIG
+log "INFO" "KUBECONFIG unset."
 
-# # Step 1: Create a Kubernetes Cluster (using the name 'cid-cluster')
-# log "INFO" "Creating a Kubernetes cluster..."
-# k3d cluster create cid-cluster --api-port 6443 -p "80:80@loadbalancer" -p "443:443@loadbalancer" --agents 1 &> /dev/null
-# export KUBECONFIG=$(k3d kubeconfig merge cid-cluster --kubeconfig-switch-context)
-# log "INFO" "Kubernetes cluster created successfully."
+# Step 1: Create a Kubernetes Cluster (using the name 'cid-cluster')
+log "INFO" "Creating a Kubernetes cluster..."
+k3d cluster create cid-cluster --api-port 6443 -p "80:80@loadbalancer" -p "443:443@loadbalancer" --agents 1 &> /dev/null
+export KUBECONFIG=$(k3d kubeconfig merge cid-cluster --kubeconfig-switch-context)
+log "INFO" "Kubernetes cluster created successfully."
 
-# # # Install GitLab
-# # log "INFO" "Installing GitLab..."
-# kubectl create namespace gitlab
-# kubectl apply -f ../confs/gitlab-app.yml -n gitlab
 
-# log "INFO" "GitLab installation initiated."
-# log "INFO" "Waiting for GitLab to be deployed..."
-# kubectl wait -n gitlab --for=condition=available deployment --all --timeout=-1s &> /dev/null
-# log "INFO" "GitLab is deployed and ready."
+# # Install GitLab
+log "INFO" "Installing GitLab..."
+kubectl create namespace gitlab &> /dev/null
+kubectl apply -f ../confs/gitlab-app.yml -n gitlab &> /dev/null
 
-# export GITLAB_IP=$(kubectl get svc -n gitlab|grep gitlab|awk '{print $4}'|tr ',' '\n'|head -n 1)
-# export DEP_NAME=$(kubectl get pods -n gitlab|grep gitlab|awk '{print $1}')
-# export GITLAB_PASSWORD=$(kubectl exec -it $DEP_NAME -n gitlab -- cat /etc/gitlab/initial_root_password|grep Password:|awk '{print $2}')
-# sudo bash -c "echo '$GITLAB_IP $DOMAIN' >> /etc/hosts" &> /dev/null
-# log "INFO" "GitLab UI is accessible at http://$DOMAIN:8080"
+log "INFO" "GitLab installation initiated."
+log "INFO" "Waiting for GitLab to be deployed..."
+kubectl wait -n gitlab --for=condition=available deployment --all --timeout=-1s &> /dev/null
+wait_for_pods "gitlab"
+log "INFO" "GitLab is deployed and ready."
+GITLAB_IP=$(kubectl get svc -n gitlab|grep gitlab|awk '{print $4}'|tr ',' '\n'|head -n 1)
+DEP_NAME=$(kubectl get pods -n gitlab|grep gitlab|awk '{print $1}')
+while [ 1 ]; do
+    if kubectl exec -n gitlab $DEP_NAME -- test -e /etc/gitlab/initial_root_password 2>/dev/null; then
+        GITLAB_PASSWORD=$(kubectl exec -it $DEP_NAME -n gitlab -- cat /etc/gitlab/initial_root_password |grep Password:|awk '{print $2}')
+        break
+    fi
+    sleep 1
+done
 
-# # # Provide GitLab access information
-# log "INFO" "GitLab is ready to use."
-# log "INFO" "Gitlab password: $GITLAB_PASSWORD"
-# log "INFO" "You can access the GitLab UI at http://$DOMAIN:8080"
-# log "INFO" "Please follow the GitLab setup process."
-# echo "********"
+# # Provide GitLab access information
+log "INFO" "GitLab is ready to use."
+log "INFO" "Gitlab password: $GITLAB_PASSWORD"
+log "INFO" "You can access the GitLab UI at http://$DOMAIN:1337"
+echo "********"
 
 if confirm; then
     # Step 4: Install Argo CD
@@ -119,7 +123,6 @@ if confirm; then
 
     # Step 5: Wait for All Pods in the 'argocd' Namespace to Be Ready
     wait_for_pods "argocd"
-    kubectl apply -f ../confs/appProject.yml
 
     # Step 6: Get Argo CD Password
     ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
@@ -130,21 +133,22 @@ if confirm; then
     kubectl create namespace dev &> /dev/null
     kubectl apply -f ../confs/appAuth.yml &> /dev/null
     log "INFO" "Application configuration applied to 'dev' namespace."
+    
+    kubectl apply -f ../confs/coredns.yml -n kube-system &>/dev/null
+    kubectl apply -f ../confs/coredns.yml &>/dev/null
+    kubectl -n kube-system delete pods -l k8s-app=kube-dns &>/dev/null
 
     # Step 7: Wait for All Pods in the 'dev' Namespace to Be Ready
     wait_for_pods "dev"
 
-    # Step 8: Port Forward to Access Argo CD UI
-    log "INFO" "Port forwarding to access Argo CD UI..."
-    kubectl port-forward svc/argocd-server -n argocd 8080:443 &> /dev/null &
-    log "INFO" "Argo CD UI is accessible at https://localhost:8080"
+    sleep 60
 
-    # Step 9: Provide Access Information
+    # Step 8: Provide Access Information
     log "INFO" "Argo CD is ready to use."
     log "INFO" "You can access the Argo CD UI at https://localhost:8080"
     log "INFO" "Log in with the username 'admin' and the password: ${ARGOCD_PASSWORD}"
+
+    kubectl port-forward svc/argocd-server -n argocd 8080:443 &>/dev/null
 else
   log "INFO" "Argo CD deployment skipped as per user choice."
 fi
-# Prevent the script from exiting immediately
-cat
