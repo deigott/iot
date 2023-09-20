@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/deigott/arogapp  # Replace with your GitHub repo URL
+    repoURL: https://github.com/f0rkr/iotapp  # Replace with your GitHub repo URL
     targetRevision: main  # Replace with the desired branch or commit
     path: manifest  # Replace with the path to your application manifests
   destination:
