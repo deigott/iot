@@ -1,4 +1,5 @@
 # Inception-of-Things (IoT) 
+<img src="https://spaceliftio.wpcomstaging.com/wp-content/uploads/2022/07/90.kubernetes-cluster.png" />
 IOt is a small kubernetes clusters with CI implemented using ArgoCD and GitLab
 
 Welcome to "Inception-of-Things (IoT)." In this documentation, I'll take you through the steps I followed to complete this System Administration exercise. Think of it as a casual conversation where I explain the project as if we were chatting over coffee. Let's dive in!
